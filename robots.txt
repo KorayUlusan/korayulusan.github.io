@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://korayulusan.github.io/sitemap.xml
