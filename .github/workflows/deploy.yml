@@ -1,0 +1,50 @@
+name: Artifact Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Reassemble, Decrypt and Extract Artifact
+        run: |
+          mkdir _site
+          # Combine all parts starting with the prefix into one file
+          cat artifact.tar.gz.* > complete_artifact.tar.gz
+
+          # Extract the reassembled file
+          tar -xzf complete_artifact.tar.gz -C _site
+
+          # Clean up
+          rm complete_artifact.tar.gz artifact.tar.gz.*
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Point this to the directory containing your unzipped files
+          path: "./_site"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
